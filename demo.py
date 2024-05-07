@@ -16,14 +16,14 @@ np.random.seed(123)
 # Set the random seed for Python's built-in random module
 random.seed(123)
 
-#%% Demo to test the trained model developed for the pipeline only SS features
+#%% Demo to test the trained model developed for the pipeline using only SS features
 # Number of features, feature selection method and classifier
 # 5, mrmr, AdaBoost
 
-#%%Load the nodules from the LDCT to test the model, the features already went through feature selection and normalization
+#%% Load the nodules from the LDCT to test the model, the features already went through feature selection and normalization
 test_df = pd.read_csv('test.csv')
-X_test = test_df.iloc[:, :-1]  # Select all rows and all columns except the last one
-y_test = test_df.iloc[:, -1]  # Select all rows and the last column
+X_test = test_df.iloc[:, :-1] 
+y_test = test_df.iloc[:, -1]  
 
 # Print the feature names
 print("Feature Names:", list(X_test.columns))
@@ -31,7 +31,6 @@ print("Feature Names:", list(X_test.columns))
 # Import the model
 model_filename = 'mrmr_Adaboost.pkl'
 with open(model_filename, 'rb') as f:
-  # Load the model object from the file
   loaded_model = pickle.load(f)
 
 # Optimal_threshold obtained from the validation set
@@ -55,17 +54,15 @@ print("Predicted Class:", y_pred)
 print("Actual Class:", actual_label)
 
 #%% Predict all the instances from the test set and evaluate
-# Obtain the y_prob
+
 y_probs = loaded_model.predict_proba(X_test.values)
+y_preds = np.where(y_probs[:, 1] < optimal_threshold, 0, 1)
 
-# result
-y_pred = np.where(y_probs[:, 1] < optimal_threshold, 0, 1)
-
-tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
+tn, fp, fn, tp = confusion_matrix(y_test, y_preds).ravel()
 sensitivity = tp / (tp + fn)
 specificity = tn / (tn + fp)
-accuracy = accuracy_score(y_test, y_pred)
-balanced_accuracy = balanced_accuracy_score(y_test, y_pred)
+accuracy = accuracy_score(y_test, y_preds)
+balanced_accuracy = balanced_accuracy_score(y_test, y_preds)
 auc = roc_auc_score(y_test, y_probs[:, 1])
 
 print('Sensitivity (Recall): %.4f' % sensitivity)
@@ -74,5 +71,5 @@ print('Accuracy: %.4f' % accuracy)
 print('AUC: %.4f' % auc)
 print('Balanced_acc: %.4f' % balanced_accuracy)
 print('\nConfusion Matrix:')
-cm = confusion_matrix(y_test, y_pred)
+cm = confusion_matrix(y_test, y_preds)
 print(cm)
